@@ -1,20 +1,51 @@
 <?php
 
+class User
+{
+
+    public $login;
+    private $password;
+    private $registration_time;
+
+    public function __construct($username, $password, $registrationTime)
+    {
+
+        $this->login = $username;
+        $this->password = $password;
+        $this->registration_time = $registrationTime;
+
+    }
+
+    /**
+     * @return string
+     */
+    function getRegistrationDate()
+    {
+        return date("H:i d.m.Y", $this->registration_time);
+    }
+
+    /**
+     * @param string $login
+     * @param string $password
+     *
+     * @return bool
+     */
+    function authenticate($login, $password)
+    {
+        return ($this->login == $login) && ($this->password == $password);
+    }
+
+}
+
 /**
- * @return string[][]
+ * @return User[]
  */
 function getAllUsers()
 {
 
     return [
-        32 => [
-            "login" => "admin",
-            "password" => "admin",
-        ],
-        64 => [
-            "login" => "user",
-            "password" => "user"
-        ],
+        32 => new User("admin", "admin", 1589386389),
+        64 => new User("user", "user", 1589386389),
     ];
 
 }
@@ -29,9 +60,9 @@ function login($login, $password)
 
     foreach (getAllUsers() as $id => $user) {
 
-        if (($user["login"] == $login) && ($user["password"] == $password)) {
+        if ($user->authenticate($login, $password)) {
 
-            $_SESSION["userId"] = $id;
+            $_SESSION["user"] = $user;
             return true;
 
         }
@@ -43,26 +74,18 @@ function login($login, $password)
 }
 
 /**
- * @return string
+ * @return User|null
  */
-function getCurrentUserName()
+function getCurrentUser()
 {
-
-    if (isset($_SESSION["userId"])) {
-
-        $user = getAllUsers()[$_SESSION["userId"]];
-        return $user["login"];
-
-    }
-
-
-    return "";
+    return isset($_SESSION["user"]) ? $_SESSION['user'] : null;
 }
 
 /**
  * @return bool|string
  */
-function authorization() {
+function authorization()
+{
 
     if (isset($_POST["login"]) && isset($_POST["password"])) {
 
@@ -75,4 +98,5 @@ function authorization() {
     }
 
     return false;
+
 }

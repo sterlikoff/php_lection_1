@@ -6,6 +6,7 @@ session_start();
 include_once "functions.php";
 
 $message = authorization();
+$user = getCurrentUser();
 
 ?>
 
@@ -17,19 +18,29 @@ $message = authorization();
 
 <body>
 
-<h1>
-    Привет, <?= getCurrentUserName(); ?>
-</h1>
-
 <?php if (!empty($message)) echo $message; ?>
 
-<form method="post">
+<?php if (isset($user)): ?>
 
-    <input type="text" name="login" placeholder="Введите логин">
-    <input type="password" name="password" placeholder="Введите пароль">
-    <input type="submit" value="Войти">
+    <h1>
+        Привет, <?= getCurrentUser()->login; ?>
+    </h1>
 
-</form>
+    <h2>
+        Дата регистрации: <?= getCurrentUser()->getRegistrationDate(); ?>
+    </h2>
+
+<?php else: ?>
+
+    <form method="post">
+
+        <input type="text" name="login" placeholder="Введите логин">
+        <input type="password" name="password" placeholder="Введите пароль">
+        <input type="submit" value="Войти">
+
+    </form>
+
+<?php endif; ?>
 
 </body>
 

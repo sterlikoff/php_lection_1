@@ -13,6 +13,7 @@ $user = getCurrentUser();
 <html lang="RU">
 
 <head>
+  <meta charset="UTF-8">
     <title>Изучаем PHP</title>
 </head>
 
@@ -23,11 +24,11 @@ $user = getCurrentUser();
 <?php if (isset($user)): ?>
 
     <h1>
-        Привет, <?= getCurrentUser()->login; ?>
+        Привет, <?= $user->login; ?>
     </h1>
 
     <h2>
-        Дата регистрации: <?= getCurrentUser()->getRegistrationDate(); ?>
+        Дата регистрации: <?= $user->getRegistrationDate(); ?>
     </h2>
 
 <?php else: ?>

@@ -1,5 +1,6 @@
 <?php
 
+include_once "GuestbookRepository.php";
 
 class FileGuestbookRepository extends GuestbookRepository
 {

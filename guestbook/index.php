@@ -3,11 +3,16 @@
 error_reporting(E_ALL);
 
 include_once "GuestbookMessage.php";
-include_once "FileGuestbookRepository.php";
 
-$repository = new FileGuestbookRepository();
+//include_once "FileGuestbookRepository.php";
+//$repository = new FileGuestbookRepository();
 
-$messages = $repository->getAll();
+$page = isset($_GET["page"]) ? $_GET["page"] : 1;
+
+include_once "DatabaseGuestbookRepository.php";
+$repository = new DatabaseGuestbookRepository();
+
+$messages = $repository->getAll($page);
 
 $model = new GuestbookMessage();
 
@@ -21,8 +26,6 @@ if (isset($_POST) && (count($_POST) > 0)) {
     }
 
 }
-
-$messages = $repository->getAll();
 
 ?>
 
@@ -57,7 +60,7 @@ $messages = $repository->getAll();
     <?php endif; ?>
 
     <div class="form-line">
-        <input type="text" name="username" placeholder="Ваше имя:" value="<?= $model->username ?>">
+        <input maxlength="25" type="text" name="username" placeholder="Ваше имя:" value="<?= $model->username ?>">
     </div>
 
     <div class="form-line">
@@ -67,6 +70,10 @@ $messages = $repository->getAll();
     <input type="submit">
 
 </form>
+
+<?php if ($page > 1): ?>
+    <a href="?page=<?= --$page; ?>">Предыдущая страница</a>
+<?php endif; ?>
 
 <?php if (count($messages) > 0) foreach ($messages as $message): ?>
 
@@ -79,6 +86,8 @@ $messages = $repository->getAll();
     </div>
 
 <?php endforeach; ?>
+
+<a href="?page=<?= ++$page; ?>">Следующая страница</a>
 
 </body>
 

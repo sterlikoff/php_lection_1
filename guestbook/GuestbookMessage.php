@@ -3,9 +3,9 @@
 class GuestbookMessage
 {
 
-    public $time;
     public $username;
     public $message;
+    public $time;
 
     /**
      * GuestbookMessage constructor.

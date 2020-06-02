@@ -3,46 +3,24 @@
 class GuestbookMessage
 {
 
-    public $username;
+    /** @var User */
+    public $user;
+
     public $message;
     public $time;
 
     /**
      * GuestbookMessage constructor.
      *
-     * @param string $username
+     * @param User $user
      * @param string $message
      */
-    public function __construct($username = "", $message = "")
+    public function __construct($user, $message)
     {
 
-        $this->username = $username;
+        $this->user = $user;
         $this->message = $message;
         $this->time = time();
-
-    }
-
-    /**
-     * @return string
-     */
-    public function toJson()
-    {
-
-        return json_encode([
-            "username" => $this->username,
-            "message" => $this->message,
-        ]);
-
-    }
-
-    /**
-     * @param $string
-     */
-    public function fromJson($string) {
-
-        $a = json_decode($string, true);
-        $this->message = $a["message"];
-        $this->username = $a["username"];
 
     }
 
@@ -56,7 +34,7 @@ class GuestbookMessage
         $hasErrors = false;
         $this->errors = [];
 
-        if (!$this->username) {
+        if (!$this->user) {
             $hasErrors = true;
             $this->errors[] = "Не заполнено ваше имя";
         }

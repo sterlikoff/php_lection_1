@@ -1,28 +1,30 @@
 <?php
 
 error_reporting(E_ALL);
+session_start();
 
 include_once "GuestbookMessage.php";
-
-//include_once "FileGuestbookRepository.php";
-//$repository = new FileGuestbookRepository();
+include_once "UserRepository.php";
+include_once "User.php";
 
 $page = isset($_GET["page"]) ? $_GET["page"] : 1;
 
 include_once "DatabaseGuestbookRepository.php";
-$repository = new DatabaseGuestbookRepository();
+$messagesRepository = new DatabaseGuestbookRepository();
 
-$messages = $repository->getAll($page);
+$messages = $messagesRepository->getAll($page);
 
-$model = new GuestbookMessage();
+$userRepository = new UserRepository();
+$currentUser = $userRepository->getCurrentUser();
+
+$model = new GuestbookMessage($currentUser, "");
 
 if (isset($_POST) && (count($_POST) > 0)) {
 
-    if (isset($_POST["username"])) $model->username = $_POST["username"];
     if (isset($_POST["message"])) $model->message = $_POST["message"];
 
     if ($model->validate()) {
-        $repository->add($model);
+        $messagesRepository->add($model);
     }
 
 }
@@ -51,25 +53,47 @@ if (isset($_POST) && (count($_POST) > 0)) {
 
 <body>
 
-<form method="post">
+<h1>Гостевая книга</h1>
 
-    <?php if ($model->hasErrors()): ?>
-        <div>
-            <?= $model->errorSummary(); ?>
+<?php if ($currentUser): ?>
+
+    <form method="post">
+
+        <?php if ($model->hasErrors()): ?>
+            <div>
+                <?= $model->errorSummary(); ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="form-line">
+            <textarea name="message" placeholder="Ваше сообщение"><?= $model->message; ?></textarea>
         </div>
-    <?php endif; ?>
 
-    <div class="form-line">
-        <input maxlength="25" type="text" name="username" placeholder="Ваше имя:" value="<?= $model->username ?>">
-    </div>
+        <input type="submit">
 
-    <div class="form-line">
-        <textarea name="message" placeholder="Ваше сообщение"><?= $model->message; ?></textarea>
-    </div>
+    </form>
 
-    <input type="submit">
+<?php else: ?>
 
-</form>
+    <p><a href="login.php">Авторизуйтесь, </a>чтобы оставить сообщение</p>
+
+<?php endif; ?>
+
+<p>
+    Всего сообщений: <?= $messagesRepository->getMessagesCount(); ?>
+</p>
+
+<?php if ($currentUser): ?>
+
+    <p>
+        Моих сообщений: <?= $messagesRepository->getMessagesCount($currentUser->id); ?>
+    </p>
+
+<?php endif; ?>
+
+<p>
+    Всего пользователей: <?= $userRepository->getUsersCount(); ?>
+</p>
 
 <?php if ($page > 1): ?>
     <a href="?page=<?= --$page; ?>">Предыдущая страница</a>
@@ -79,7 +103,7 @@ if (isset($_POST) && (count($_POST) > 0)) {
 
     <div class="message">
 
-        <p><?= $message->username; ?></p>
+        <p><?= $message->user->name; ?></p>
         <p><?= $message->message; ?></p>
         <p><?= date("d.m.Y H:i", $message->time); ?></p>
 

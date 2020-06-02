@@ -1,28 +1,11 @@
 <?php
 
-include_once "GuestbookRepository.php";
-class DatabaseGuestBookRepository extends GuestbookRepository
+include_once "DatabaseRepository.php";
+
+class DatabaseGuestBookRepository
 {
 
-    /**
-     * @return false|mysqli
-     *
-     * @throws Exception
-     */
-    private function connect() {
-
-        $connect = mysqli_connect("localhost", "mysql", "mysql");
-
-        if ($connect == false) {
-            $error = mysqli_connect_error();
-            throw new Exception("База данных недоступна. $error.");
-        }
-
-        mysqli_select_db($connect, "gb");
-
-        return $connect;
-
-    }
+    use DatabaseRepository;
 
     const limit = 5;
     const messages_table_name = "messages";
@@ -35,27 +18,20 @@ class DatabaseGuestBookRepository extends GuestbookRepository
     public function add($message)
     {
 
-       $connect = $this->connect();
+        $this->connect();
 
-       $attributes = [
-           $message->username,
-           $message->message,
-           $message->time,
-       ];
+        $attributes = [
+            $message->user->id,
+            $message->message,
+            $message->time,
+        ];
 
-       $attributes = array_map(function($item) {
-           return "\"$item\"";
-       }, $attributes);
+        $attributes = array_map(function ($item) {
+            return "\"$item\"";
+        }, $attributes);
 
-       $query = "INSERT INTO " . self::messages_table_name . " (username, text, time) VALUES (" . implode(",", $attributes) . ")";
-
-       $result = mysqli_query($connect, $query);
-       if ($result == false) {
-           $error = mysqli_error($connect);
-           throw new Exception("Некорректный запрос. $error.");
-       }
-
-       return true;
+        $this->query("INSERT INTO " . self::messages_table_name . " (user_id, text, time) VALUES (" . implode(",", $attributes) . ")");
+        return true;
 
     }
 
@@ -69,31 +45,45 @@ class DatabaseGuestBookRepository extends GuestbookRepository
     public function getAll($page)
     {
 
+        $userRepository = new UserRepository();
+
         $offset = ($page - 1) * self::limit;
 
-        $connect = $this->connect();
-        $query = "SELECT * FROM " . self::messages_table_name . " ORDER BY id DESC LIMIT " . self::limit . " OFFSET $offset";
-
-        $result = mysqli_query($connect, $query);
-        if ($result == false) {
-            $error = mysqli_error($connect);
-            throw new Exception("Некорректный запрос. $error.");
-        }
-
-        $array = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        $this->connect();
+        $array = $this->query("SELECT * FROM " . self::messages_table_name . " ORDER BY id DESC LIMIT " . self::limit . " OFFSET $offset");
 
         $messages = [];
         foreach ($array as $item) {
 
-            $message = new GuestbookMessage();
-            $message->username = $item["username"];
-            $message->message = $item["text"];
+            $message = new GuestbookMessage($userRepository->getById($item["user_id"]), $item["text"]);
             $message->time = $item["time"];
 
             $messages[] = $message;
+
         }
 
         return $messages;
+
+    }
+
+    /**
+     * @param int|null $userId
+     * @return mixed
+     * @throws Exception
+     */
+    public function getMessagesCount($userId = null)
+    {
+
+        $varName = "message_count";
+        $this->connect();
+
+        $query = "SELECT COUNT(*) AS $varName FROM " . self::messages_table_name;
+        if ($userId) $query .= " WHERE user_id = {$userId}";
+
+        $data = $this->query($query);
+
+        return $data[0][$varName];
+
     }
 
 }
